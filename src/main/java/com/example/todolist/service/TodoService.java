@@ -87,30 +87,30 @@ public class TodoService {
 
     @Transactional
     public void deleteTodo(Long id, UserDetails userDetails) {
-        Todo todo = findAndValidateTodo(id, userDetails);
+        Todo todoToDelete = findAndValidateTodo(id, userDetails);
         // 삭제작업이기때문에 확인하기위해 로그 남기기
         // 중요 작업은 WARN 레벨로 남기는게 좋다고함
         log.warn("Deleting todo id: {} by user: {}", id, userDetails.getUsername());
         // todo 삭제 단순 삭제기때문에 return은 굳이 하지 않았음
-        todoRepository.delete(todo);
+        todoRepository.delete(todoToDelete);
     }
 
     @Transactional
     public TodoUpdateRecord updateTodoContent(Long id, TodoUpdateRecord todoUpdateRecord, UserDetails userDetails) {
-        Todo todo = findAndValidateTodo(id, userDetails);
+        Todo todoToUpdate = findAndValidateTodo(id, userDetails);
         // 입력받은 record로 todo의 content를 변경
-        todo.setContent(todoUpdateRecord.content());
+        todoToUpdate.setContent(todoUpdateRecord.content());
         // record로 바꾼 content 리턴
-        return new TodoUpdateRecord(todo.getContent());
+        return new TodoUpdateRecord(todoToUpdate.getContent());
     }
 
     @Transactional
     public TodoCompleteRecord updateTodoStatus(Long id, UserDetails userDetails) {
-        Todo todo = findAndValidateTodo(id, userDetails);
+        Todo todoToUpdate = findAndValidateTodo(id, userDetails);
         // todo의 완료상태를 반대상태로 변경
-        todo.setCompleted(!todo.isCompleted());
+        todoToUpdate.setCompleted(!todoToUpdate.isCompleted());
         // record로 상태를 바꾼 todo의 content, 완료상태 리턴
-        return new TodoCompleteRecord(todo.getContent(), todo.isCompleted());
+        return new TodoCompleteRecord(todoToUpdate.getContent(), todoToUpdate.isCompleted());
     }
 
     @Transactional

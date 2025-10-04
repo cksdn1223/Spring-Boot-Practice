@@ -1,9 +1,8 @@
-package com.example.todolist.service;
+package com.example.todolist.security;
 
 import com.example.todolist.entity.AppUser;
 import com.example.todolist.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.User.UserBuilder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,13 +19,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<AppUser> user = appUserRepository.findByUsername(username);
-        if (user.isPresent()){
-            return withUsername(username)
-                    .password(user.get().getPassword())
-                    .roles(user.get().getRole())
-                    .build();
-        }
-        else throw new UsernameNotFoundException("User not found");
+        AppUser user = appUserRepository.findByUsername(username)
+                .orElseThrow(()-> new UsernameNotFoundException("User not found"));
+        return withUsername(username)
+                .password(user.getPassword())
+                .roles(user.getRole())
+                .build();
+
     }
 }

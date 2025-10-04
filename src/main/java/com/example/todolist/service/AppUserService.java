@@ -3,6 +3,7 @@ package com.example.todolist.service;
 import com.example.todolist.dto.AccountCredentialsRecord;
 import com.example.todolist.dto.AppUserRecord;
 import com.example.todolist.dto.ChangePasswordRecord;
+import com.example.todolist.dto.DeleteAccountRequest;
 import com.example.todolist.entity.AppUser;
 import com.example.todolist.exception.AccessDeniedException;
 import com.example.todolist.exception.ResourceNotFoundException;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +27,10 @@ public class AppUserService {
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public List<AppUserRecord> getAllUser() {
+    public List<AppUserRecord> getAllUser(UserDetails userDetails) {
+        AppUser user = appUserRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(()-> new UsernameNotFoundException("찾을수 없음 " + userDetails.getUsername()));
+        if(!user.getRole().equals("ADMIN")) throw new AccessDeniedException("권한이 없음");
         // 모든 유저를 찾고 record로 만들어 list형태로 리턴
         return appUserRepository.findAll().stream()
                 .map(appUser -> new AppUserRecord(appUser.getUsername(), appUser.getRole(), appUser.getTodos())).toList();
@@ -37,15 +42,26 @@ public class AppUserService {
         return new AppUserRecord(appUser.getUsername(), appUser.getRole(), appUser.getTodos());
     }
 
-    public ResponseEntity<AccountCredentialsRecord> saveUser(AccountCredentialsRecord request) {
+    @Transactional
+    public void deleteUser(DeleteAccountRequest request, UserDetails userDetails) {
+        AppUser appUser = appUserRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(()-> new ResourceNotFoundException("사용자를 찾을 수 없습니다: " + userDetails.getUsername()));
+        if(!passwordEncoder.matches(request.password(), appUser.getPassword())){
+            throw new AccessDeniedException("비밀번호가 일치하지 않습니다.");
+        }
+        appUserRepository.delete(appUser);
+    }
+
+    @Transactional
+    public AppUserRecord saveUser(AccountCredentialsRecord request) {
         // record로 입력받은 유저네임으로 유저를 찾음
         Optional<AppUser> searchUser = appUserRepository.findByUsername(request.username());
         // 유저가 없어서 비어있다면
         if (searchUser.isEmpty()) {
-            // 회원가입 가능하니 유저를 저장 비밀번호 암호화 필수
-            appUserRepository.save(new AppUser(request.username(), passwordEncoder.encode(request.password()), "USER"));
-            // 만들었으니 record와 HttpStatus를 CREATED로 리턴
-            return new ResponseEntity<>(request, HttpStatus.CREATED);
+            AppUser newUser = new AppUser(request.username(), passwordEncoder.encode(request.password()), "USER");
+            AppUser savedUser = appUserRepository.save(newUser);
+            // 생성된 사용자 정보를 DTO로 변환하여 반환
+            return new AppUserRecord(savedUser.getUsername(), savedUser.getRole(), savedUser.getTodos());
         }
         // searchUser가 비어있지 않다면 회원가입 불가능하니 예외처리
         else throw new UsernameAlreadyExistsException("이미 존재하는 사용자입니다: " + request.username());

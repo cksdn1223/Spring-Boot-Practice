@@ -52,7 +52,17 @@ public class TodoService {
             throw new AccessDeniedException("이 리소스에 접근할 권한이 없습니다.");
         }
     }
-
+    /**
+     * ID로 Todo를 조회하고, 현재 사용자가 소유자인지 검증합니다.
+     * @param id 조회 및 검증할 Todo의 ID
+     * @param userDetails 현재 로그인한 사용자 정보
+     * @return 검증된 Todo 엔티티
+     */
+    private Todo findAndValidateTodo(Long id, UserDetails userDetails) {
+        Todo todo = findTodoById(id);
+        validateOwnership(todo, userDetails);
+        return todo;
+    }
 /**************************
     API 구현 로직들
 ***************************/
@@ -77,23 +87,17 @@ public class TodoService {
 
     @Transactional
     public void deleteTodo(Long id, UserDetails userDetails) {
-        // 입력받은 id를 가진 Todo를 찾음 없으면 메서드상에서 예외처리함
-        Todo todo = findTodoById(id);
+        Todo todo = findAndValidateTodo(id, userDetails);
         // 삭제작업이기때문에 확인하기위해 로그 남기기
         // 중요 작업은 WARN 레벨로 남기는게 좋다고함
         log.warn("Deleting todo id: {} by user: {}", id, userDetails.getUsername());
-        // 현재 로그인한 유저가 이 todo의 소유가 맞는지 확인하는 메서드 다르면 예외처리
-        validateOwnership(todo, userDetails);
-        // id를 가진 todo 삭제 단순 삭제기때문에 return은 굳이 하지 않았음
-        todoRepository.deleteById(id);
+        // todo 삭제 단순 삭제기때문에 return은 굳이 하지 않았음
+        todoRepository.delete(todo);
     }
 
     @Transactional
     public TodoUpdateRecord updateTodoContent(Long id, TodoUpdateRecord todoUpdateRecord, UserDetails userDetails) {
-        // 입력받은 id를 가진 Todo를 찾음 없으면 메서드상에서 예외처리함
-        Todo todo = findTodoById(id);
-        // 현재 로그인한 유저가 이 todo의 소유가 맞는지 확인하는 메서드 다르면 예외처리
-        validateOwnership(todo, userDetails);
+        Todo todo = findAndValidateTodo(id, userDetails);
         // 입력받은 record로 todo의 content를 변경
         todo.setContent(todoUpdateRecord.content());
         // record로 바꾼 content 리턴
@@ -102,10 +106,7 @@ public class TodoService {
 
     @Transactional
     public TodoCompleteRecord updateTodoStatus(Long id, UserDetails userDetails) {
-        // 입력받은 id를 가진 Todo를 찾음 없으면 메서드상에서 예외처리함
-        Todo todo = findTodoById(id);
-        // 현재 로그인한 유저가 이 todo의 소유가 맞는지 확인하는 메서드 다르면 예외처리
-        validateOwnership(todo, userDetails);
+        Todo todo = findAndValidateTodo(id, userDetails);
         // todo의 완료상태를 반대상태로 변경
         todo.setCompleted(!todo.isCompleted());
         // record로 상태를 바꾼 todo의 content, 완료상태 리턴

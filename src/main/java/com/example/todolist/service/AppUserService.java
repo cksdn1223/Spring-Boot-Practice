@@ -27,10 +27,7 @@ public class AppUserService {
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public List<AppUserRecord> getAllUser(UserDetails userDetails) {
-        AppUser user = appUserRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(()-> new UsernameNotFoundException("찾을수 없음 " + userDetails.getUsername()));
-        if(!user.getRole().equals("ADMIN")) throw new AccessDeniedException("권한이 없음");
+    public List<AppUserRecord> getAllUser() {
         // 모든 유저를 찾고 record로 만들어 list형태로 리턴
         return appUserRepository.findAll().stream()
                 .map(appUser -> new AppUserRecord(appUser.getUsername(), appUser.getRole(), appUser.getTodos())).toList();

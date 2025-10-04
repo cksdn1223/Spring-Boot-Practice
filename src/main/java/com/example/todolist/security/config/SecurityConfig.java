@@ -79,7 +79,7 @@ public class SecurityConfig {
         config.setAllowedHeaders(Arrays.asList("*"));
 
         config.setAllowCredentials(false);
-        config.applyPermitDefaultValues();
+//        config.applyPermitDefaultValues();
 
         source.registerCorsConfiguration("/**",config);
         return source;

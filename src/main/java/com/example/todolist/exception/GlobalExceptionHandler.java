@@ -1,13 +1,17 @@
 package com.example.todolist.exception;
 
+import com.example.todolist.dto.ErrorResponseRecord;
 import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,15 +26,15 @@ public class GlobalExceptionHandler {
      */
     // @ExceptionHandler: 특정 예외 클래스를 지정하여 처리할 메소드를 정의합니다.
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleResourceNotFoundException(ResourceNotFoundException ex) {
-        // 클라이언트에게 보여줄 에러 메시지를 일관된 형식으로 구성합니다.
-        Map<String, String> errorResponse = Map.of(
-                "status", "404",
-                "error", "Not Found",
-                "message", ex.getMessage() // 서비스 계층에서 전달한 메시지를 포함합니다.
-        );
+    public ResponseEntity<ErrorResponseRecord> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
+        ErrorResponseRecord errorResponseRecord = new ErrorResponseRecord(
+                LocalDateTime.now(),
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage(),
+                request.getDescription(false).replace("uri=", ""));
         // 구성된 에러 메시지와 함께 HTTP 404 (Not Found) 상태 코드를 응답합니다.
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(errorResponseRecord, HttpStatus.NOT_FOUND);
     }
 
     /**
@@ -39,13 +43,15 @@ public class GlobalExceptionHandler {
      * @return 403 HttpStatus.FORBIDDEN
      */
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Map<String, String>> handleAccessDeniedException(AccessDeniedException ex) {
-        Map<String, String> errorResponse = Map.of(
-                "status", "403",
-                "error", "Forbidden",
-                "message", ex.getMessage()
+    public ResponseEntity<ErrorResponseRecord> handleAccessDeniedException(AccessDeniedException ex, WebRequest request) {
+        ErrorResponseRecord errorResponseRecord = new ErrorResponseRecord(
+                LocalDateTime.now(),
+                HttpStatus.FORBIDDEN.value(),
+                "Forbidden",
+                ex.getMessage(),
+                request.getDescription(false).replace("uri=", "")
         );
-        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+        return new ResponseEntity<>(errorResponseRecord, HttpStatus.FORBIDDEN);
     }
 
     /**
@@ -54,13 +60,15 @@ public class GlobalExceptionHandler {
      * @return 400 HttpStatus.BAD_REQUEST
      */
     @ExceptionHandler(NoContentException.class)
-    public ResponseEntity<Map<String, String>> handleNoContentException(NoContentException ex) {
-        Map<String, String> errorResponse = Map.of(
-                "status", "400",
-                "error", "Bad Request",
-                "message", ex.getMessage()
+    public ResponseEntity<ErrorResponseRecord> handleNoContentException(NoContentException ex, WebRequest request) {
+        ErrorResponseRecord errorResponseRecord = new ErrorResponseRecord(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                ex.getMessage(),
+                request.getDescription(false).replace("uri=", "")
         );
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponseRecord, HttpStatus.BAD_REQUEST);
     }
 
     /**
@@ -69,13 +77,15 @@ public class GlobalExceptionHandler {
      * @return 409 HttpStatus.CONFLICT
      */
     @ExceptionHandler(UsernameAlreadyExistsException.class)
-    public ResponseEntity<Map<String, String>> handleUsernameAlreadyExistsException(UsernameAlreadyExistsException ex) {
-        Map<String, String> errorResponse = Map.of(
-                "status", "409",
-                "error", "Conflict",
-                "message", ex.getMessage()
+    public ResponseEntity<ErrorResponseRecord> handleUsernameAlreadyExistsException(UsernameAlreadyExistsException ex, WebRequest request) {
+        ErrorResponseRecord errorResponseRecord = new ErrorResponseRecord(
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                ex.getMessage(),
+                request.getDescription(false).replace("uri=", "")
         );
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+        return new ResponseEntity<>(errorResponseRecord, HttpStatus.CONFLICT);
     }
 
     /**
@@ -84,7 +94,7 @@ public class GlobalExceptionHandler {
      * @return {@code 400-HttpStatus.BAD_REQUEST}
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ErrorResponseRecord> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
@@ -92,11 +102,14 @@ public class GlobalExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
 
-        Map<String, Object> errorResponse = Map.of(
-                "status", "400",
-                "error", "Bad Request",
-                "details", errors
+        String detailedMessage = "Validation failed for: " + errors.toString();
+        ErrorResponseRecord errorResponseRecord = new ErrorResponseRecord(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                detailedMessage,
+                request.getDescription(false).replace("uri=", "")
         );
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponseRecord, HttpStatus.BAD_REQUEST);
     }
 }

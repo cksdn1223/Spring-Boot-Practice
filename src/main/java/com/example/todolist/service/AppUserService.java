@@ -31,6 +31,12 @@ public class AppUserService {
                 .map(appUser -> new AppUserRecord(appUser.getUsername(), appUser.getRole(), appUser.getTodos())).toList();
     }
 
+    public AppUserRecord getUserInfo(UserDetails userDetails) {
+        AppUser appUser = appUserRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(()-> new ResourceNotFoundException("사용자를 찾을 수 없습니다: " + userDetails.getUsername()));
+        return new AppUserRecord(appUser.getUsername(), appUser.getRole(), appUser.getTodos());
+    }
+
     public ResponseEntity<AccountCredentialsRecord> saveUser(AccountCredentialsRecord request) {
         // record로 입력받은 유저네임으로 유저를 찾음
         Optional<AppUser> searchUser = appUserRepository.findByUsername(request.username());

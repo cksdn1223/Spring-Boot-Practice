@@ -25,6 +25,10 @@ public class AppUserController {
         return appUserService.getAllUser();
     }
 
+    @GetMapping("users/me")
+    public AppUserRecord getMyInfo(@AuthenticationPrincipal UserDetails userDetails) {
+        return appUserService.getUserInfo(userDetails);
+    }
     @PostMapping("users/save")
     public ResponseEntity<AccountCredentialsRecord> saveUser(@RequestBody AccountCredentialsRecord request) {
         return appUserService.saveUser(request);

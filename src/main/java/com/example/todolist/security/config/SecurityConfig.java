@@ -1,5 +1,8 @@
-package com.example.todolist.security;
+package com.example.todolist.security.config;
 
+import com.example.todolist.security.AuthEntryPoint;
+import com.example.todolist.security.AuthenticationFilter;
+import com.example.todolist.security.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,10 +35,10 @@ public class SecurityConfig {
     private final AuthEntryPoint exceptionHandler;
     private final AuthenticationFilter authenticationFilter;
 
-    // 패스워드 비교하는 부분
-    public void configGlobal (AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService).passwordEncoder(new BCryptPasswordEncoder());
-    }
+//    // 패스워드 비교하는 부분
+//    public void configGlobal (AuthenticationManagerBuilder auth) throws Exception {
+//        auth.userDetailsService(userDetailsService).passwordEncoder(new BCryptPasswordEncoder());
+//    }
 
     // 패스워드 암호화 시켜주는 빈
     @Bean
@@ -59,6 +62,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users/save").permitAll()
+                        // Swagger UI와 API 문서를 위한 경로를 인증 없이 허용합니다.
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(exceptionHandler))

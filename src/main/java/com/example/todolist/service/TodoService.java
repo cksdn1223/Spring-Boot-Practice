@@ -67,10 +67,10 @@ public class TodoService {
         // 컨트롤러에서 로그인한 유저의 정보를 가져와 AppUser객체로 저장
         // 로그인한 유저기때문에 예외처리 안해도 될거같지만 안전을 위해 예외처리함
         AppUser appUser = appUserRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException(userDetails.getUsername() + " 을 찾을수 없음"));
-        // 생성 시점에는 관계를 설정하지 않음 ⬇
-        Todo newTodo = new Todo(todoRequestRecord.content(), null);
-        appUser.addTodo(newTodo); // 편의 메소드를 통해 양방향 관계를 한번에 설정
+                .orElseThrow(() -> new ResourceNotFoundException(userDetails.getUsername() + " 을 찾을수 없습니다."));
+
+        Todo newTodo = new Todo(todoRequestRecord.content(), appUser);
+
         // save 메서드가 객체를 리턴해주기때문에 바로 체이닝메서드 가능
         return new TodoRequestRecord(todoRepository.save(newTodo).getContent());
     }

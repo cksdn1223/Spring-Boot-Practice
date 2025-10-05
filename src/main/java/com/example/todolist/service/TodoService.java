@@ -66,9 +66,15 @@ public class TodoService {
 /**************************
     API 구현 로직들
 ***************************/
-    @Transactional(readOnly = true)
-    public TodoRequestRecord findById(Long id) {
-        return new TodoRequestRecord(findTodoById(id).getContent());
+
+    public TodoCompleteRecord findById(Long id) {
+        Todo todo = findTodoById(id);
+        return new TodoCompleteRecord(todo.getContent(), todo.isCompleted());
+    }
+
+    public List<TodoCompleteRecord> findAll(UserDetails userDetails) {
+        List<Todo> todos = todoRepository.findAllByAppUser_Username(userDetails.getUsername());
+        return todos.stream().map(todo -> new TodoCompleteRecord(todo.getContent(),todo.isCompleted())).toList();
     }
 
     public TodoRequestRecord addTodo(TodoRequestRecord todoRequestRecord, UserDetails userDetails) {

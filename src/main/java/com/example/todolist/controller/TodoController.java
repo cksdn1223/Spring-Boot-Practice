@@ -16,6 +16,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -25,8 +27,14 @@ public class TodoController {
 
     @GetMapping("/todos/{id}")
     @Operation(summary = "Id로 투두리스트 찾기", description = "ID로 해당하는 Todo를 찾습니다.")
-    public ResponseEntity<TodoRequestRecord> find(@PathVariable Long id) {
+    public ResponseEntity<TodoCompleteRecord> find(@PathVariable Long id) {
         return new ResponseEntity<>(todoService.findById(id),HttpStatus.OK);
+    }
+
+    @GetMapping("/users/todos")
+    @Operation(summary = "내 모든 Todo 목록 조회", description = "현재 로그인된 사용자의 모든 Todo 목록을 조회합니다.")
+    public ResponseEntity<List<TodoCompleteRecord>> findAll(@AuthenticationPrincipal UserDetails userDetails) {
+        return new ResponseEntity<>(todoService.findAll(userDetails),HttpStatus.OK);
     }
     
     @PostMapping("/todos/save")

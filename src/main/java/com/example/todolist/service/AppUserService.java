@@ -1,19 +1,14 @@
 package com.example.todolist.service;
 
-import com.example.todolist.dto.AccountCredentialsRecord;
-import com.example.todolist.dto.AppUserRecord;
-import com.example.todolist.dto.ChangePasswordRecord;
-import com.example.todolist.dto.DeleteAccountRequest;
+import com.example.todolist.dto.*;
 import com.example.todolist.entity.AppUser;
+import com.example.todolist.entity.Todo;
 import com.example.todolist.exception.AccessDeniedException;
 import com.example.todolist.exception.ResourceNotFoundException;
 import com.example.todolist.exception.UsernameAlreadyExistsException;
 import com.example.todolist.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +27,8 @@ public class AppUserService {
         return appUserRepository.findAll().stream()
                 .map(appUser -> new AppUserRecord(appUser.getUsername(), appUser.getRole(), appUser.getTodos())).toList();
     }
+
+
 
     public AppUserRecord getUserInfo(UserDetails userDetails) {
         AppUser appUser = appUserRepository.findByUsername(userDetails.getUsername())
